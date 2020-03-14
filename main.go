@@ -1,57 +1,45 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"time"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"Edwardz43/tgbot/crawl/beauty"
+	"Edwardz43/tgbot/message/from"
+	"Edwardz43/tgbot/worker"
+	"Edwardz43/tgbot/worker/rabbitmqworker"
 )
 
+var jobWorker worker.Worker
+
 func main() {
-	var form []byte
-	var err error
-	var update Update
-
-	if form, err = getUpdates(); err != nil {
-		log.Printf("Get update error : %v", err)
-	}
-
-	if update, err = parseMessage(form); err != nil {
-		log.Printf("Parse message error : %v", err)
-	}
-	if !update.OK {
-		log.Println("Get update failed")
-	}
-
-	c := &Conn{}
-	connStr := getMongoConnStr()
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connStr))
-	c.setup(client, "Test", "tgbot")
-
-	for _, v := range update.ResultList {
-
-		filter := bson.M{
-			"updateid": v.UpdateID,
-		}
-		_, err := c.upsert(filter, v)
-		if err != nil {
-			log.Printf("Insert error :%v", err)
-			continue
-		}
-		log.Println("Update success")
-	}
+	jobWorker = &rabbitmqworker.Worker{}
+	go jobWorker.Do(GetPTTBueaty)
+	select {}
+	//serve()
 }
 
+func GetPTTBueaty(arg ...interface{}) error {
+
+	result := arg[0].(*from.Result)
+
+	if result.Message.Text != "!b" {
+		return nil
+	}
+
+	crawler := &beauty.Crawler{}
+	s := crawler.Get()
+
+	c := &Command{
+		ChatID:    result.Message.Chat.ID,
+		Text:      s,
+		ParseMode: "HTML",
+	}
+
+	return send(&c)
+}
+
+/*
 func serve() {
-	http.HandleFunc("/bot", botHandler)
-	http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/", botHandler)
+	log.Fatal(http.ListenAndServe(":5008", nil))
 }
 
 func botHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,17 +50,27 @@ func botHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("READ ERROR : %v", err)
 	}
 
-	log.Printf("request %v", string(b))
+	log.Printf("request %v from proxy\n", string(b))
 
 	w.WriteHeader(200)
-	// w.Write([]byte("hello"))
-}
 
-func parseMessage(msg []byte) (Update, error) {
-	u := Update{}
-	err := json.Unmarshal(msg, &u)
+	result, err := parseMessage(b)
+
 	if err != nil {
-		return Update{}, err
+		log.Printf("Parse message error : %v", err)
 	}
-	return u, nil
+
+	if result.Message.Text == "!b" {
+		jobWorker.Do(GetPTTBueaty)
+	}
 }
+*/
+
+// func parseMessage(msg []byte) (Result, error) {
+// 	u := Result{}
+// 	err := json.Unmarshal(msg, &u)
+// 	if err != nil {
+// 		return Result{}, err
+// 	}
+// 	return u, nil
+// }
