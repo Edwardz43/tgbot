@@ -1,30 +1,47 @@
 package main
 
 import (
-	"Edwardz43/tgbot/crawl/beauty"
+	"Edwardz43/tgbot/crawl/ptt"
+	"Edwardz43/tgbot/err"
 	"Edwardz43/tgbot/message/from"
 	"Edwardz43/tgbot/worker"
 	"Edwardz43/tgbot/worker/rabbitmqworker"
+	"regexp"
 )
 
 var jobWorker worker.Worker
+var failOnError = err.FailOnError
 
 func main() {
 	jobWorker = &rabbitmqworker.Worker{}
-	go jobWorker.Do(GetPTTBueaty)
+	go jobWorker.Do(CrawlPTT)
 	select {}
 	//serve()
 }
 
-func GetPTTBueaty(arg ...interface{}) error {
-
+// CrawlPTT crawls the target board from PTT
+func CrawlPTT(arg ...interface{}) error {
 	result := arg[0].(*from.Result)
+	cmd := result.Message.Text
 
-	if result.Message.Text != "!b" {
+	isCommand, err := regexp.MatchString(`^![a-z]+$`, cmd)
+	failOnError(err, "error when regex tgbot message")
+
+	if !isCommand {
 		return nil
 	}
 
-	crawler := &beauty.Crawler{}
+	m := ptt.BoardMap
+
+	var board string
+
+	if value, ok := m[cmd]; ok {
+		board = value
+	} else {
+		return nil
+	}
+
+	crawler := ptt.GetInstance(board)
 	s := crawler.Get()
 
 	c := &Command{
@@ -35,42 +52,3 @@ func GetPTTBueaty(arg ...interface{}) error {
 
 	return send(&c)
 }
-
-/*
-func serve() {
-	http.HandleFunc("/", botHandler)
-	log.Fatal(http.ListenAndServe(":5008", nil))
-}
-
-func botHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("READ ERROR : %v", err)
-	}
-
-	log.Printf("request %v from proxy\n", string(b))
-
-	w.WriteHeader(200)
-
-	result, err := parseMessage(b)
-
-	if err != nil {
-		log.Printf("Parse message error : %v", err)
-	}
-
-	if result.Message.Text == "!b" {
-		jobWorker.Do(GetPTTBueaty)
-	}
-}
-*/
-
-// func parseMessage(msg []byte) (Result, error) {
-// 	u := Result{}
-// 	err := json.Unmarshal(msg, &u)
-// 	if err != nil {
-// 		return Result{}, err
-// 	}
-// 	return u, nil
-// }

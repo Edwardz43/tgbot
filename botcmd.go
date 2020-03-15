@@ -11,6 +11,7 @@ import (
 	"net/http"
 )
 
+// Command is a data model of chatbot command
 type Command struct {
 	ChatID    int64  `json:"chat_id"`
 	Text      string `json:"text"`

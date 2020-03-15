@@ -1,4 +1,4 @@
-package beauty
+package ptt
 
 import (
 	"fmt"
@@ -12,8 +12,27 @@ import (
 	"golang.org/x/net/html"
 )
 
+// BoardMap mapps bot command to specific PTT board
+var BoardMap = map[string]string{
+	"!b":    "Beauty",
+	"!s":    "Stock",
+	"!g":    "Gossiping",
+	"!l":    "Lifeismoney",
+	"!n":    "NBA",
+	"!bs":   "Baseball",
+	"!wh":   "nCoV2019",
+	"!pc":   "PC_Shopping",
+	"!help": "List",
+}
+
+// GetInstance return a instance of PTT crawler
+func GetInstance(board string) *Crawler {
+	return &Crawler{board: board}
+}
+
 // Crawler represents instance of beauty crawler
 type Crawler struct {
+	board    string
 	target   string
 	links    []string
 	posts    []*post
@@ -32,8 +51,8 @@ func (p *post) toString() string {
 }
 
 var (
-	cookie       = http.Cookie{Name: "over18", Value: "1"}
-	pageSize int = 10
+	cookie   = http.Cookie{Name: "over18", Value: "1"}
+	pageSize = 10
 )
 
 func errHandler(msg string, err error) {
@@ -42,9 +61,23 @@ func errHandler(msg string, err error) {
 	}
 }
 
+func (c *Crawler) listCMDs() string {
+	var l string
+
+	for k, v := range BoardMap {
+		l += fmt.Sprintf("%s : %s\n", k, v)
+	}
+
+	return l
+}
+
 // Get gets the target
 func (c *Crawler) Get() string {
-	c.target = "https://www.ptt.cc/bbs/Beauty/index.html"
+	if c.board == "List" {
+		return c.listCMDs()
+	}
+
+	c.target = fmt.Sprintf("https://www.ptt.cc/bbs/%s/index.html", c.board)
 	urls, err := c.getURL()
 	if err != nil {
 		//TODO
@@ -130,7 +163,7 @@ func (c *Crawler) getURL() ([]string, error) {
 	var urls = make([]string, pageSize)
 
 	for i := 0; i < pageSize; i++ {
-		urls[i] = fmt.Sprintf("https://www.ptt.cc/bbs/Beauty/index%d.html", c.lastPage-i)
+		urls[i] = fmt.Sprintf("https://www.ptt.cc/bbs/%s/index%d.html", c.board, c.lastPage-i)
 	}
 
 	c.links = make([]string, 0)
@@ -213,7 +246,7 @@ func (c *Crawler) visitTarget(n *html.Node) {
 	}
 }
 
-// getLastPage get the last page of the discussion board
+// getLastPage return the last page of the board
 func (c *Crawler) getLastPage(n *html.Node) int {
 	forEachNode(n, c.visitPages, nil)
 	s := c.links[1]
