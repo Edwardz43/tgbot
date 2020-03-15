@@ -32,3 +32,7 @@ func GetToken() string {
 func GetRabbitDNS() string {
 	return get("RABBITMQ_DNS")
 }
+
+func GetESURL() string {
+	return get("ELASTICSEARCH_URL")
+}

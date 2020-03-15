@@ -1,60 +1,67 @@
 package zaplogger
 
 import (
+	"Edwardz43/tgbot/log"
+
 	"go.uber.org/zap"
 )
 
 // GetInstance return a logger instance with options
 func GetInstance(args ...interface{}) *Logger {
 	l := &Logger{
-		zap: zap.NewExample(),
+		Zap: zap.NewExample(),
 	}
 	return l
 }
 
 // Logger implements logger by uber zap
 type Logger struct {
-	zap *zap.Logger
+	Zap *zap.Logger
+}
+
+func (l *Logger) hook() error {
+
+	return nil
 }
 
 // INFO create a info level log
-func (l *Logger) INFO(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Infow(args[0].(string), args[1:])
+func (l *Logger) INFO(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Infow(log.Message, "date", &log.Date, "line", log.Line)
 }
 
 // DEBUG create a debug level log
-func (l *Logger) DEBUG(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Debugw(args[0].(string), args[1:])
+func (l *Logger) DEBUG(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Debugw(log.Message, "date", &log.Date, "line", log.Line)
 }
 
 // WARN create a warn level log
-func (l *Logger) WARN(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Warnw(args[0].(string), args[1:])
+func (l *Logger) WARN(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Warnw(log.Message, "date", &log.Date, "line", log.Line)
 }
 
 // ERROR create a error level log
-func (l *Logger) ERROR(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Errorw(args[0].(string), args[1:])
+func (l *Logger) ERROR(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Errorw(log.Message, "date", &log.Date, "line", log.Line)
 }
 
 // PANIC create a panic level log
-func (l *Logger) PANIC(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Panicw(args[0].(string), args[1:])
+func (l *Logger) PANIC(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Panicw(log.Message, "date", &log.Date, "line", log.Line)
 }
 
 // FATAL create a fatal level log
-func (l *Logger) FATAL(args ...interface{}) {
-	defer l.zap.Sync() // flushes buffer, if any
-	sugar := l.zap.Sugar()
-	sugar.Fatalw(args[0].(string), args[1:])
+func (l *Logger) FATAL(log *log.Content) {
+	defer l.Zap.Sync() // flushes buffer, if any
+	sugar := l.Zap.Sugar()
+	sugar.Fatalw(log.Message, "date", &log.Date, "line", log.Line)
 }
