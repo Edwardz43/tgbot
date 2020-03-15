@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ func get(key string) string {
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("./")
+	viper.AddConfigPath("../")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -19,10 +21,18 @@ func get(key string) string {
 	return viper.GetString(key)
 }
 
-func getMongoConnStr() string {
+func GetMongoConnStr() string {
 	return get("MONGODB_CONNSTR")
 }
 
-func getToken() string {
+func GetToken() string {
 	return get("TOKEN")
+}
+
+func GetRabbitDNS() string {
+	return get("RABBITMQ_DNS")
+}
+
+func GetESURL() string {
+	return get("ELASTICSEARCH_URL")
 }

@@ -1,78 +1,54 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"time"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"Edwardz43/tgbot/crawl/ptt"
+	"Edwardz43/tgbot/err"
+	"Edwardz43/tgbot/message/from"
+	"Edwardz43/tgbot/worker"
+	"Edwardz43/tgbot/worker/rabbitmqworker"
+	"regexp"
 )
 
+var jobWorker worker.Worker
+var failOnError = err.FailOnError
+
 func main() {
-	var form []byte
-	var err error
-	var update Update
-
-	if form, err = getUpdates(); err != nil {
-		log.Printf("Get update error : %v", err)
-	}
-
-	if update, err = parseMessage(form); err != nil {
-		log.Printf("Parse message error : %v", err)
-	}
-	if !update.OK {
-		log.Println("Get update failed")
-	}
-
-	c := &Conn{}
-	connStr := getMongoConnStr()
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connStr))
-	c.setup(client, "Test", "tgbot")
-
-	for _, v := range update.ResultList {
-
-		filter := bson.M{
-			"updateid": v.UpdateID,
-		}
-		_, err := c.upsert(filter, v)
-		if err != nil {
-			log.Printf("Insert error :%v", err)
-			continue
-		}
-		log.Println("Update success")
-	}
+	jobWorker = &rabbitmqworker.Worker{}
+	go jobWorker.Do(CrawlPTT)
+	select {}
+	//serve()
 }
 
-func serve() {
-	http.HandleFunc("/bot", botHandler)
-	http.ListenAndServe(":8080", nil)
-}
+// CrawlPTT crawls the target board from PTT
+func CrawlPTT(arg ...interface{}) error {
+	result := arg[0].(*from.Result)
+	cmd := result.Message.Text
 
-func botHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	isCommand, err := regexp.MatchString(`^![a-z]+$`, cmd)
+	failOnError(err, "error when regex tgbot message")
 
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("READ ERROR : %v", err)
+	if !isCommand {
+		return nil
 	}
 
-	log.Printf("request %v", string(b))
+	m := ptt.BoardMap
 
-	w.WriteHeader(200)
-	// w.Write([]byte("hello"))
-}
+	var board string
 
-func parseMessage(msg []byte) (Update, error) {
-	u := Update{}
-	err := json.Unmarshal(msg, &u)
-	if err != nil {
-		return Update{}, err
+	if value, ok := m[cmd]; ok {
+		board = value
+	} else {
+		return nil
 	}
-	return u, nil
+
+	crawler := ptt.GetInstance(board)
+	s := crawler.Get()
+
+	c := &Command{
+		ChatID:    result.Message.Chat.ID,
+		Text:      s,
+		ParseMode: "HTML",
+	}
+
+	return send(&c)
 }
