@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -250,8 +251,21 @@ func (c *Crawler) visitTarget(n *html.Node) {
 func (c *Crawler) getLastPage(n *html.Node) int {
 	forEachNode(n, c.visitPages, nil)
 	s := c.links[1]
-	l := len(s)
-	i, _ := strconv.Atoi(s[l-9 : l-5])
+
+	reg, err := regexp.Compile("index([0-9]+?)\\.html")
+	if err != nil {
+		log.Println(err)
+	}
+
+	sa := reg.FindStringSubmatch(s)
+
+	if sa == nil {
+		//TODO log
+		return 0
+	}
+
+	i, _ := strconv.Atoi(sa[1])
+
 	return i + 1
 }
 

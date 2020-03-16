@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestGetPTTBeauty(t *testing.T) {
-	crawler := ptt.Crawler{}
+func TestGetPTTCrawl(t *testing.T) {
+	crawler := ptt.GetInstance("Lifeismoney")
 	s := crawler.Get()
 	l := len(s)
 	log.Println(l)
