@@ -3,22 +3,30 @@ package rabbitmqworker
 import (
 	"Edwardz43/tgbot/config"
 	"Edwardz43/tgbot/err"
+	"Edwardz43/tgbot/log"
 	"Edwardz43/tgbot/message/from"
+	"Edwardz43/tgbot/worker"
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/streadway/amqp"
 )
 
 var failOnError = err.FailOnError
 
+// GetInstance returns a instance of rabbitmq worker
+func GetInstance(l log.Logger) worker.Worker {
+	return &Worker{
+		logger: l,
+	}
+}
+
 // Worker is the worker uses rabbitmq
 type Worker struct {
 	channel   *amqp.Channel
 	queueName string
 	Result    *from.Result
-	//Job       *worker.Job
-
+	logger    log.Logger
 }
 
 // connect creates a rabbitmq client connection
@@ -27,7 +35,7 @@ func (r *Worker) connect() bool {
 	conn, err := amqp.Dial(config.GetRabbitDNS())
 
 	if err != nil {
-		log.Printf("Failed to connect to RabbitMQ : %s", err)
+		r.logger.ERROR(fmt.Sprintf("Failed to connect to RabbitMQ : %s", err))
 		return false
 	}
 
@@ -35,7 +43,7 @@ func (r *Worker) connect() bool {
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Printf("Failed to open a channel : %s", err)
+		r.logger.ERROR(fmt.Sprintf("Failed to open a channel : %s", err))
 		return false
 	}
 
@@ -49,7 +57,7 @@ func (r *Worker) connect() bool {
 	)
 
 	if err != nil {
-		log.Printf("Failed to declare a queue : %s", err)
+		r.logger.ERROR(fmt.Sprintf("Failed to declare a queue : %s", err))
 		return false
 	}
 
@@ -60,7 +68,7 @@ func (r *Worker) connect() bool {
 	)
 
 	if err != nil {
-		log.Printf("Failed to set QoS : %s", err)
+		r.logger.ERROR(fmt.Sprintf("Failed to set QoS : %s", err))
 		return false
 	}
 
@@ -76,7 +84,7 @@ func (r *Worker) Do(job func(args ...interface{}) error) {
 	ok := r.connect()
 
 	if !ok {
-		log.Panicf("Failed to connect to rabbitmq channel")
+		r.logger.ERROR(fmt.Sprintln("Failed to connect to rabbitmq channel"))
 		return
 	}
 
@@ -98,15 +106,14 @@ func (r *Worker) Do(job func(args ...interface{}) error) {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Worker Received a message: %s", d.Body)
+			r.logger.INFO(fmt.Sprintf("Worker Received a message: %s", d.Body))
 			json.Unmarshal(d.Body, &r.Result)
 			if r.Result == nil {
-				log.Panicln("json unmarshal failed")
+				r.logger.PANIC("json unmarshal failed")
 			}
 			err := job(r.Result)
-			//TODO
 			failOnError(err, "Failed : error from job")
-			log.Println("Worker Done")
+			r.logger.INFO("Work Done")
 			d.Ack(false)
 		}
 	}()
