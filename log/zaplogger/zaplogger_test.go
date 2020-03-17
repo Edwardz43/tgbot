@@ -1,8 +1,7 @@
 package zaplogger_test
 
 import (
-	"Edwardz43/tgbot/log"
-	zaplogger "Edwardz43/tgbot/log/zap"
+	"Edwardz43/tgbot/log/zaplogger"
 	"testing"
 	"time"
 )
@@ -16,11 +15,6 @@ type test struct {
 
 func TestLog(t *testing.T) {
 	logger := zaplogger.GetInstance()
-	c := &log.Content{
-		Message: "test message",
-		Date:    time.Now(),
-		Line:    123,
-	}
-	logger.INFO(c)
+	logger.INFO("test message")
 	t.Log("done")
 }
