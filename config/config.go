@@ -12,6 +12,8 @@ func get(key string) string {
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./")
 	viper.AddConfigPath("../")
+	viper.AddConfigPath("../../")
+	viper.AddConfigPath("../../../")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -35,4 +37,12 @@ func GetRabbitDNS() string {
 
 func GetESURL() string {
 	return get("ELASTICSEARCH_URL")
+}
+
+func GetESIndex() string {
+	return get("ELASTICSEARCH_INDEX")
+}
+
+func GetLogHook() string {
+	return get("ELASTICSEARCH_HOOK")
 }
