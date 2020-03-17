@@ -1,0 +1,1 @@
+docker stop mytgbot && docker rm mytgbot
