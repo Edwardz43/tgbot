@@ -10,10 +10,12 @@ import (
 
 func TestEmitThenReturnSuccess(t *testing.T) {
 	c := &log.Content{
-		Message: "Test ES Log",
-		Date:    time.Now(),
-		Line:    123,
+		Message:  "Test ES Log",
+		Date:     time.Now(),
+		Line:     123,
+		FileName: "hook_test.go",
+		Function: "TestEmitThenReturnSuccess",
 	}
-	err := log.Emit("my_test_index", c)
+	err := log.Emit(c)
 	assert.Nil(t, err)
 }
