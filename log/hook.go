@@ -57,9 +57,9 @@ func Emit(c *Content) error {
 
 // Content is a log content data model
 type Content struct {
-	Message  string    `json:"message"`
-	Date     time.Time `json:"date"`
-	Line     int       `json:"line"`
-	FileName string    `json:"file_name"`
-	Function string    `json:"function"`
+	Level   string    `json:"level"`
+	Date    time.Time `json:"date"`
+	Caller  string    `json:"caller"`
+	Message string    `json:"message"`
+	Stack   string    `json:"stack"`
 }

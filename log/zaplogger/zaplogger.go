@@ -3,9 +3,11 @@ package zaplogger
 import (
 	"Edwardz43/tgbot/config"
 	"Edwardz43/tgbot/log"
+	"fmt"
 	"runtime"
 	"strconv"
-	"time"
+
+	"go.uber.org/zap/zapcore"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -13,9 +15,27 @@ import (
 
 // GetInstance return a logger instance with options
 func GetInstance(args ...interface{}) log.Logger {
-	l := &Logger{
-		Zap: zap.NewExample(),
+
+	// init
+	l := &Logger{}
+
+	all := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return true
+	})
+
+	esEncoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
+	w, _, err := zap.Open("foo.log")
+
+	if err != nil {
+		fmt.Println(err)
 	}
+
+	core := zapcore.NewTee(zapcore.RegisterHooks(zapcore.NewCore(esEncoder, w, all), l.Hook))
+
+	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zapcore.ErrorLevel))
+	defer logger.Sync()
+
+	l.Zap = logger
 
 	isHooked, err := strconv.ParseBool(config.GetLogHook())
 
@@ -43,68 +63,59 @@ type Logger struct {
 	IsHook bool
 }
 
-func (l *Logger) hook(msg string, date time.Time, line int, file string, function string) {
+// Hook implements the hook function of zap logger hook
+func (l *Logger) Hook(e zapcore.Entry) error {
 	if l.IsHook {
-		log.Emit(&log.Content{
-			Message:  msg,
-			Date:     date,
-			Line:     line,
-			FileName: file,
-			Function: function,
+		err := log.Emit(&log.Content{
+			Level:   e.Level.CapitalString(),
+			Message: e.Message,
+			Date:    e.Time,
+			Caller:  e.Caller.TrimmedPath(),
+			Stack:   e.Stack,
 		})
+		return err
 	}
+	return nil
 }
 
 // INFO create a info level log
 func (l *Logger) INFO(msg string) {
-	file, line, function := trace()
 	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Infow(msg, "date", time.Now(), "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Infow(msg)
 }
 
 // DEBUG create a debug level log
 func (l *Logger) DEBUG(msg string) {
-	file, line, function := trace()
 	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Debugw(msg, "date", time.Now, "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Debugw(msg)
 }
 
 // WARN create a warn level log
 func (l *Logger) WARN(msg string) {
-	file, line, function := trace()
-	defer l.Zap.Sync() // flushes buffer, if any
+	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Warnw(msg, "date", time.Now, "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Warnw(msg)
 }
 
 // ERROR create a error level log
 func (l *Logger) ERROR(msg string) {
-	file, line, function := trace()
-	defer l.Zap.Sync() // flushes buffer, if any
+	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Errorw(msg, "date", time.Now, "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Errorw(msg)
 }
 
 // PANIC create a panic level log
 func (l *Logger) PANIC(msg string) {
-	file, line, function := trace()
-	defer l.Zap.Sync() // flushes buffer, if any
+	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Panicw(msg, "date", time.Now, "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Panicw(msg)
 }
 
 // FATAL create a fatal level log
 func (l *Logger) FATAL(msg string) {
-	file, line, function := trace()
-	defer l.Zap.Sync() // flushes buffer, if any
+	defer l.Zap.Sync()
 	sugar := l.Zap.Sugar()
-	sugar.Fatalw(msg, "date", time.Now, "line", line, "file_name", file, "func", function)
-	l.hook(msg, time.Now(), line, file, function)
+	sugar.Fatalw(msg)
 }
