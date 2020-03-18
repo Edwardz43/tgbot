@@ -3,58 +3,49 @@ package zaplogger
 import (
 	"Edwardz43/tgbot/config"
 	"Edwardz43/tgbot/log"
-	"fmt"
-	"runtime"
 	"strconv"
-
-	"go.uber.org/zap/zapcore"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// GetInstance return a logger instance with options
-func GetInstance(args ...interface{}) log.Logger {
+// GetInstance as the factory creating a logger instance with options
+func GetInstance() log.Logger {
 
 	// init
-	l := &Logger{}
+	logger := &Logger{}
 
-	all := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return true
-	})
+	all := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool { return true })
 
 	esEncoder := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
-	w, _, err := zap.Open("foo.log")
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	logrotateWriter := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   config.GetLogPath(),
+		MaxSize:    20, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, // days
+	})
 
-	core := zapcore.NewTee(zapcore.RegisterHooks(zapcore.NewCore(esEncoder, w, all), l.Hook))
+	core := zapcore.NewTee(zapcore.RegisterHooks(zapcore.NewCore(esEncoder, logrotateWriter, all), logger.Hook))
 
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(zapcore.ErrorLevel))
-	defer logger.Sync()
+	logger.Zap = zap.New(
+		core,
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+		zap.AddStacktrace(zapcore.ErrorLevel),
+	)
 
-	l.Zap = logger
+	defer logger.Zap.Sync()
 
-	isHooked, err := strconv.ParseBool(config.GetLogHook())
-
-	if err != nil {
+	if isHooked, err := strconv.ParseBool(config.GetLogHook()); err != nil {
 		errors.Errorf("zaplogger GetInstance failed")
+	} else {
+		logger.IsHook = isHooked
 	}
 
-	l.IsHook = isHooked
-
-	return l
-}
-
-func trace() (string, int, string) {
-	pc := make([]uintptr, 15)
-	n := runtime.Callers(2, pc)
-	frames := runtime.CallersFrames(pc[:n])
-	frames.Next()
-	frame, _ := frames.Next()
-	return frame.File, frame.Line, frame.Function
+	return logger
 }
 
 // Logger implements logger by uber zap
@@ -81,41 +72,35 @@ func (l *Logger) Hook(e zapcore.Entry) error {
 // INFO create a info level log
 func (l *Logger) INFO(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Infow(msg)
+	l.Zap.Info(msg)
 }
 
 // DEBUG create a debug level log
 func (l *Logger) DEBUG(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Debugw(msg)
+	l.Zap.Debug(msg)
 }
 
 // WARN create a warn level log
 func (l *Logger) WARN(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Warnw(msg)
+	l.Zap.Warn(msg)
 }
 
 // ERROR create a error level log
 func (l *Logger) ERROR(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Errorw(msg)
+	l.Zap.Error(msg)
 }
 
 // PANIC create a panic level log
 func (l *Logger) PANIC(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Panicw(msg)
+	l.Zap.DPanic(msg)
 }
 
 // FATAL create a fatal level log
 func (l *Logger) FATAL(msg string) {
 	defer l.Zap.Sync()
-	sugar := l.Zap.Sugar()
-	sugar.Fatalw(msg)
+	l.Zap.Fatal(msg)
 }

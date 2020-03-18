@@ -3,18 +3,28 @@ package zaplogger_test
 import (
 	"Edwardz43/tgbot/log/zaplogger"
 	"testing"
-	"time"
 )
 
-type test struct {
-	v1 string
-	v2 bool
-	v3 int
-	v4 time.Time
+func TestLogWithInfoLevel(t *testing.T) {
+	logger := zaplogger.GetInstance()
+	logger.INFO("test info log")
+	t.Log("done")
 }
 
-func TestLog(t *testing.T) {
+func TestLogWithErrorLevel(t *testing.T) {
 	logger := zaplogger.GetInstance()
-	logger.INFO("test message")
+	logger.ERROR("test error log")
+	t.Log("done")
+}
+
+func TestLogWithPanicLevel(t *testing.T) {
+	logger := zaplogger.GetInstance()
+	logger.PANIC("test panic log")
+	t.Log("done")
+}
+
+func TestLogWithFatalLevel(t *testing.T) {
+	logger := zaplogger.GetInstance()
+	logger.FATAL("test panic log")
 	t.Log("done")
 }
