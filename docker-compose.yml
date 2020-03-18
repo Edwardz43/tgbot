@@ -1,0 +1,8 @@
+version: '3'
+
+services:  
+  mytgbot:
+    container_name: mytgbot    
+    build: .    
+    volumes:
+      - ./logs/://var/log/mytgbot/    

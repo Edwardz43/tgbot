@@ -8,12 +8,21 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
-// Emit emits a log to elasticsearch host
-func Emit(index string, c *Content) error {
+var (
+	index string
+	url   string
+)
 
-	url := fmt.Sprintf("%s/%s/_doc", config.GetESURL(), index)
+func init() {
+	index = config.GetESIndex()
+	url = fmt.Sprintf("%s/%s/_doc", config.GetESURL(), index)
+}
+
+// Emit emits a log to elasticsearch host
+func Emit(c *Content) error {
 
 	reqBodyBytes := new(bytes.Buffer)
 
@@ -44,4 +53,13 @@ func Emit(index string, c *Content) error {
 	log.Println(string(msg))
 
 	return nil
+}
+
+// Content is a log content data model
+type Content struct {
+	Level   string    `json:"level"`
+	Date    time.Time `json:"date"`
+	Caller  string    `json:"caller"`
+	Message string    `json:"message"`
+	Stack   string    `json:"stack"`
 }

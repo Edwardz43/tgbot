@@ -16,7 +16,10 @@ import (
 // BoardMap mapps bot command to specific PTT board
 var BoardMap = map[string]string{
 	"!b":    "Beauty",
+	"!c":    "C_Chat",
+	"!e":    "e-shopping",
 	"!s":    "Stock",
+	"!se":   "sex",
 	"!g":    "Gossiping",
 	"!l":    "Lifeismoney",
 	"!n":    "NBA",
