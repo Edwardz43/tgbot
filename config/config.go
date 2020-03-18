@@ -46,3 +46,7 @@ func GetESIndex() string {
 func GetLogHook() string {
 	return get("ELASTICSEARCH_HOOK")
 }
+
+func GetLogPath() string {
+	return get("LOG_PATH")
+}
