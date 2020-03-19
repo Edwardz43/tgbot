@@ -35,11 +35,9 @@ func CrawlPTT(arg ...interface{}) error {
 		return nil
 	}
 
-	m := ptt.BoardMap
-
 	var board string
 
-	if value, ok := m[cmd]; ok {
+	if value, ok := ptt.BoardMap[cmd]; ok {
 		board = value
 	} else {
 		return nil
