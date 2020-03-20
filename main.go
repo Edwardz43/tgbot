@@ -35,15 +35,14 @@ func CrawlPTT(arg ...interface{}) error {
 		return nil
 	}
 
-	var board string
+	board, ok := ptt.BoardMap[cmd]
 
-	if value, ok := ptt.BoardMap[cmd]; ok {
-		board = value
-	} else {
+	if !ok {
 		return nil
 	}
 
 	crawler := ptt.GetInstance(board)
+
 	s := crawler.Get()
 
 	c := &Command{
