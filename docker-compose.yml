@@ -2,7 +2,8 @@ version: '3'
 
 services:  
   mytgbot:
-    container_name: mytgbot    
+    container_name: mytgbot
+    restart: always
     build: .    
     volumes:
       - ./logs/://var/log/mytgbot/    
