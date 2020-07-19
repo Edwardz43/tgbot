@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -28,10 +29,16 @@ func GetMongoConnStr() string {
 }
 
 func GetToken() string {
+	if(os.Getenv("K8S") == "1") {
+		return os.Getenv("TOKEN")
+	}
 	return get("TOKEN")
 }
 
 func GetRabbitDNS() string {
+	if(os.Getenv("K8S") == "1") {
+		return os.Getenv("RABBITMQ_DNS")
+	}
 	return get("RABBITMQ_DNS")
 }
 
