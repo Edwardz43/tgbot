@@ -29,6 +29,9 @@ func main() {
 func CrawlPTT(arg ...interface{}) error {
 	result := arg[0].(*from.Result)
 	msg := strings.Split(result.Message.Text, "@")
+	if len(msg) < 2 {
+		return nil
+	}
 	cmd := msg[0]
 	target := msg[1]
 	if target != config.GetBotID() {
