@@ -31,6 +31,10 @@ func GetToken() string {
 	return get("TOKEN")
 }
 
+func GetBotID() string {
+	return get("BOT_ID")
+}
+
 func GetRabbitDNS() string {
 	return get("RABBITMQ_DNS")
 }
