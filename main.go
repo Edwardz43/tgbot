@@ -28,7 +28,7 @@ func CrawlPTT(arg ...interface{}) error {
 	result := arg[0].(*from.Result)
 	cmd := result.Message.Text
 
-	isCommand, err := regexp.MatchString(`^![a-z]+$`, cmd)
+	isCommand, err := regexp.MatchString(`^/[a-z]+$`, cmd)
 	failOnError(err, "error when regex tgbot message")
 
 	if !isCommand {
