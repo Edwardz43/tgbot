@@ -15,18 +15,18 @@ import (
 
 // BoardMap mapps bot command to specific PTT board
 var BoardMap = map[string]string{
-	"!b":    "Beauty",
-	"!c":    "C_Chat",
-	"!e":    "e-shopping",
-	"!s":    "Stock",
-	"!se":   "sex",
-	"!g":    "Gossiping",
-	"!l":    "Lifeismoney",
-	"!n":    "NBA",
-	"!bs":   "Baseball",
-	"!wh":   "nCoV2019",
-	"!pc":   "PC_Shopping",
-	"!help": "List",
+	"/b":    "Beauty",
+	"/c":    "C_Chat",
+	"/e":    "e-shopping",
+	"/s":    "Stock",
+	"/se":   "sex",
+	"/g":    "Gossiping",
+	"/l":    "Lifeismoney",
+	"/n":    "NBA",
+	"/bs":   "Baseball",
+	"/wh":   "nCoV2019",
+	"/pc":   "PC_Shopping",
+	"/help": "List",
 }
 
 // GetInstance return a instance of PTT crawler

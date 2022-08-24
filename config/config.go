@@ -35,6 +35,10 @@ func GetToken() string {
 	return get("TOKEN")
 }
 
+func GetBotID() string {
+	return get("BOT_ID")
+}
+
 func GetRabbitDNS() string {
 	if(os.Getenv("K8S") == "1") {
 		return os.Getenv("RABBITMQ_DNS")
