@@ -9,6 +9,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.mongodb.org/mongo-driver v1.17.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/net v0.33.0
+	golang.org/x/net v0.34.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
