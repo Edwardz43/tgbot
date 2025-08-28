@@ -8,7 +8,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/streadway/amqp v1.1.0
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	go.mongodb.org/mongo-driver v1.17.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.43.0
